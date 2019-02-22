@@ -11,7 +11,7 @@ To confirm the solutions, check against a graphical root locus solver. An exampl
 
 Requires user to provide either b_coefficents and a_coefficents *or* zeros and poles. Given a characteristic equation of from a(s) + K\*b(s) = 0, *or* of the form 1 + K\*b(s)/a(s) = 0. b_coefficients and a_coefficents are the coefficients of the [monic polynomials](https://en.wikipedia.org/wiki/Monic_polynomial) b(s) and a(s). The zeros are the roots of b(s) and the poles are the roots of a(s).
 
-If K_degree is "negative", this will provide root locus infor for when gain is less than 0.
+If K_degree is "negative", this will provide root locus info for when gain is less than 0.
 
 Returns a dict of values which includes:
 - poles: Pole locations. Possibly complex numbers.
