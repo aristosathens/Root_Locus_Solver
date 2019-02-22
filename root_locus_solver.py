@@ -47,22 +47,6 @@ def _get_function_name(depth):
     '''
     return inspect.stack()[depth].function
 
-def print_info(values, stack_depth = 2):
-    '''
-        Prints values and info about caller function.
-    '''
-    caller_function = ""
-    try:
-        if stack_depth != None:
-            caller_function = _get_function_name(stack_depth).capitalize()
-    except:
-        print("Warning: Unable to get function name.")
-        
-    print()
-    print("------ " + caller_function + " ------")
-    print("values:")
-    pprint(values)
-
 
 # -------------------- Controls Helper Functions -------------------- #
 
@@ -279,7 +263,7 @@ def _check_multiplicity(point, b_coefficients, a_coefficients, K_degree):
     return max(list(c.values()))
 
 
-# -------------------- Root Locus Master Function -------------------- #
+# -------------------- Public Functions -------------------- #
 
 def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles = None, K_degree = "positive"):
     '''
@@ -317,6 +301,24 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
         "real_axis_points" : real_axis_points,
         "real_axis_angles" : real_axis_angles,
     }
+
+
+def print_info(values, stack_depth = 2):
+    '''
+        Prints values and info about caller function.
+    '''
+    caller_function = ""
+    try:
+        if stack_depth != None:
+            caller_function = _get_function_name(stack_depth).capitalize()
+    except:
+        print("Warning: Unable to get function name.")
+        
+    print()
+    print("------ " + caller_function + " ------")
+    print("values:")
+    pprint(values)
+
 
 # -------------------- Main -------------------- #
 
