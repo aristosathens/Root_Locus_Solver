@@ -11,7 +11,7 @@ To confirm the solutions, check against a graphical root locus solver. An exampl
 
 Requires user to provide either b_coefficents and a_coefficents *or* zeros and poles. Given a characteristic equation of from a(s) + K\*b(s) = 0, *or* of the form 1 + K\*b(s)/a(s) = 0. b_coefficients and a_coefficents are the coefficients of the [monic polynomials](https://en.wikipedia.org/wiki/Monic_polynomial) b(s) and a(s). The zeros are the roots of b(s) and the poles are the roots of a(s).
 
-If K_degree is negative, this will provide root locus infor for when gain is less than 0.
+If K_degree is "negative", this will provide root locus infor for when gain is less than 0.
 
 Returns a dict of values which includes:
 - poles: Pole locations. Possibly complex numbers.
@@ -26,3 +26,16 @@ Returns a dict of values which includes:
 `print_info(values, stack_depth = 2)`
 
 Optional. Nicely prints dict using pprint. Optionally prints caller functions, depending on value of stack_depth. Pass stack_depth = None to avoid printing this. 
+
+
+## Example
+
+```
+from root_locus_solver import root_locus, print_info
+
+poles = [ -4 + 2j, -4 - 2j, 1 ]
+zeros = [ -1 ]
+
+values = root_locus(poles = poles, zeros = zeros)
+print_info(values)
+```
