@@ -47,7 +47,6 @@ def _get_function_name(depth):
     '''
     return inspect.stack()[depth].function
 
-
 # -------------------- Controls Helper Functions -------------------- #
 
 def _get_distance(point1, point2):
@@ -262,7 +261,6 @@ def _check_multiplicity(point, b_coefficients, a_coefficients, K_degree):
     c = {pair[0] : pair[1] for pair in c.items() if pair[1] > 1}
     return max(list(c.values()))
 
-
 # -------------------- Public Functions -------------------- #
 
 def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles = None, K_degree = "positive"):
@@ -301,7 +299,6 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
         "real_axis_points" : real_axis_points,
         "real_axis_angles" : real_axis_angles,
     }
-
 
 def print_info(values, stack_depth = 2):
     '''
