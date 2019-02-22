@@ -52,8 +52,12 @@ def print_info(values, stack_depth = 2):
         Prints values and info about caller function.
     '''
     caller_function = ""
-    if stack_depth != None:
-        caller_function = _get_function_name(stack_depth).capitalize()
+    try:
+        if stack_depth != None:
+            caller_function = _get_function_name(stack_depth).capitalize()
+    except:
+        print("Warning: Unable to get function name.")
+        
     print()
     print("------ " + caller_function + " ------")
     print("values:")
