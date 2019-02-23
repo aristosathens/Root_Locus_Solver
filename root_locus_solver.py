@@ -13,11 +13,11 @@ import numpy as np                  # Use for finding roots, evaluationg polynom
 
 # -------------------- Constants -------------------- #
 
-# Allow for floating point rounding erros
-angle_rounding_error = 1e-2
+# Allow for floating point rounding errors
+_angle_rounding_error = 1e-2
 
 # When checking for equality, round to this decimal place
-rounding_decimal_place = 3
+_rounding_decimal_place = 3
 
 # -------------------- Misc Helper Functions -------------------- #
 
@@ -124,7 +124,7 @@ def _check_angles(points, poles, zeros, K_degree):
         raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
     # Check that values are 0, within some rounding error
-    rounding_error = angle_rounding_error * np.ones(len(sum_pole_angles))
+    rounding_error = _angle_rounding_error * np.ones(len(sum_pole_angles))
     return np.logical_and( \
                 np.less(-rounding_error, value),
                 np.greater(rounding_error, value))
@@ -254,7 +254,7 @@ def _check_multiplicity(point, b_coefficients, a_coefficients, K_degree):
     roots = np.roots(equation)
 
     # Only look at real value
-    roots = [round(root.real, rounding_decimal_place) for root in roots]
+    roots = [round(root.real, _rounding_decimal_place) for root in roots]
 
     # Find max multipliciy of roots
     c = Counter(roots)
@@ -284,10 +284,10 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
     if K_degree != "positive" and K_degree != "negative":
         raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
-    centroid = _center_of_asymptotes(poles[:], zeros[:])
-    asymptote_angles = _angles_of_all_asymptotes(poles[:], zeros[:], K_degree)
-    departure_angles = _get_all_angles_of_departure(poles[:], zeros[:], K_degree)
-    real_axis_points = _get_real_axis_points(b_coefficients[:], a_coefficients[:], K_degree)
+    centroid = _center_of_asymptotes(poles, zeros)
+    asymptote_angles = _angles_of_all_asymptotes(poles, zeros, K_degree)
+    departure_angles = _get_all_angles_of_departure(poles, zeros, K_degree)
+    real_axis_points = _get_real_axis_points(b_coefficients, a_coefficients, K_degree)
     real_axis_angles = _get_real_axis_angles(real_axis_points, b_coefficients, a_coefficients, K_degree)
 
     return {
