@@ -38,6 +38,8 @@ zeros = [ -1 ]
 
 values = root_locus(poles = poles, zeros = zeros)
 print_info(values)
+```
+```
 
 >>> ------ <__main__> ------
 >>> values:
