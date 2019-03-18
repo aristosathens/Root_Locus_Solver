@@ -19,9 +19,11 @@ __all__ = [                             # Exported functions
 # =============================================================================
 # Constants
 
-_ROUNDING_DECIMAL_PLACE = 3 # Allow for floating point rounding errors.
+# Allow for floating point rounding errors.
+_ROUNDING_DECIMAL_PLACE = 3 
 
-_POSITIVE = 1               # Options for direction of change in K.
+# Options for direction of change in K.
+_POSITIVE = 1               
 _NEGATIVE = 2
 
 # =============================================================================
