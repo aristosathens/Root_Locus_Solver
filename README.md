@@ -22,26 +22,19 @@ Returns a dict of values which includes:
 - real_axis_points: Points where branches enter/exit the real-axis. Real number.
 - real_axis_angles: Angles of arrival for branches entering the real-axis. In degrees.
 
-#### print_info
-`print_info(values, stack_depth = 2)`
-
-Optional. Nicely prints dict using pprint. Optionally prints caller functions, depending on value of stack_depth. Pass stack_depth = None to avoid printing this. 
-
-
 ## Example
 
 ```
-from root_locus_solver import root_locus, print_info
+from root_locus_solver import root_locus
+from pprint import pprint
 
 poles = [ -4 + 2j, -4 - 2j, 1 ]
 zeros = [ -1 ]
 
 values = root_locus(poles = poles, zeros = zeros)
-print_info(values)
+pprint(values)
 ```
 ```
->>> ------ <__main__> ------
->>> values:
 >>> {'asymptote_angles': array([-90.,  90.]),
 >>>  'centroid': (-3+0j),
 >>>  'departure_angles': [78.11134196037204, 281.88865803962796, 180.0],
