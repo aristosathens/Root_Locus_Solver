@@ -6,12 +6,21 @@
     Import print_info function to print everything nicely.
 '''
 
-import inspect                      # Use to get function names
-from pprint import pprint           # Use to print nicely
-from collections import Counter     # Use to count number of root occurrences
-import numpy as np                  # Use for finding roots, evaluationg polynomials, finding polynomial derivatives
+import numpy as np                      # Use for finding roots, evaluationg polynomials, finding polynomial derivatives
 
-# -------------------- Constants -------------------- #
+from sys import argv, modules           # Check for command line arguments and get module objects
+from pprint import pprint               # Use to print nicely
+from collections import Counter         # Use to count number of root occurrences
+from inspect import stack, signature    # Use to get function names
+
+# Exported functions
+__all__ = [
+    "root_locus",
+    "print_info",
+]
+
+# =============================================================================
+# Constants
 
 # Allow for floating point rounding errors
 _angle_rounding_error = 1e-2
@@ -19,35 +28,37 @@ _angle_rounding_error = 1e-2
 # When checking for equality, round to this decimal place
 _rounding_decimal_place = 3
 
-# -------------------- Misc Helper Functions -------------------- #
+# =============================================================================
+# Helper Functions
+
+def _get_function_name(depth):
+    '''
+        Get caller function's name.
+        Ex:
+            func A:
+                print(_get_function_name(depth=1))
+            ^ this prints 'A'
+    '''
+    return stack()[depth].function
 
 def _generate_polynomial_from_roots(roots):
     '''
         Given roots as numpy array, return polynomial as numpy array.
-        polyfromroots() is an old function so it gives coefficients in reverse order (lowest degree first).
+        polyfromroots() is an old function so it gives coefficients in
+            reverse order (lowest degree first).
         Use np.flip() to get correct order (highest degree first).
     '''
     return np.flip(np.polynomial.polynomial.polyfromroots(roots))
 
 def _wrap_to_pi(angle):
     '''
-        Returns angle value that is between [-2pi, 2pi].
+        Return angle value that is between [-pi, pi].
         angle is in degrees.
     '''
-    two_pi = np.degrees(2 * np.pi)
-    return (angle % two_pi) - two_pi
-
-def _get_function_name(depth):
-    '''
-        Get's caller function's name.
-        Ex:
-            func A:
-                print(_get_function_name(depth=1))
-            ^ this prints 'A'
-    '''
-    return inspect.stack()[depth].function
-
-# -------------------- Controls Helper Functions -------------------- #
+    if isinstance(angle, list):
+        return np.unwrap(angle)
+    else:
+        return np.unwrap(np.array([angle]))[0]
 
 def _get_distance(point1, point2):
     '''
@@ -77,8 +88,7 @@ def _get_angle(point1, point2):
     delta_real = point2.real - point1.real
     delta_j = point2.imag - point1.imag
     angle = np.arctan2(delta_j, delta_real)
-    return np.degrees(angle)
-    # return _wrap_to_pi(np.degrees(angle))
+    return _wrap_to_pi(np.degrees(angle))
 
 def _get_angles_sum(point, poles_or_zeros):
     '''
@@ -87,11 +97,13 @@ def _get_angles_sum(point, poles_or_zeros):
     angles = [_get_angle(pole, point) for pole in poles_or_zeros]
     return np.sum(angles)
 
-# -------------------- Root Locus Functions -------------------- #
+# =============================================================================
+# Root Locus Functions 
 
 def _points_on_root_locus(points, b_coefficients, a_coefficients, K_degree):
     '''
-        Check if the given combination of K, a(s), and b(s) evaluatied at points, is on the root locus.
+        Check if the given combination of K, a(s), and b(s) evaluatied at
+            points, is on the root locus.
         points is the set of values for s to check.
         
         If K_degree == "positive", equation is:
@@ -261,7 +273,8 @@ def _check_multiplicity(point, b_coefficients, a_coefficients, K_degree):
     c = {pair[0] : pair[1] for pair in c.items() if pair[1] > 1}
     return max(list(c.values()))
 
-# -------------------- Public Functions -------------------- #
+# =============================================================================
+# Public Functions
 
 def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles = None, K_degree = "positive"):
     '''
@@ -302,26 +315,57 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
 
 def print_info(values, stack_depth = 2):
     '''
-        Prints values and info about caller function.
+        Print values and info about caller function.
     '''
     caller_function = ""
     try:
         if stack_depth != None:
             caller_function = _get_function_name(stack_depth).capitalize()
-    except:
-        print("Warning: Unable to get function name.")
+    except IndexError:
+        pass
         
     print()
     print("------ " + caller_function + " ------")
     print("values:")
     pprint(values)
 
+# =============================================================================
+# CLI
 
-# -------------------- Main -------------------- #
+def _print_help():
+    '''
+        Print name, args, docstring for all public objects, stored in __all__.
+        Print contents of exampl.py.
+    '''
+    print("\n--- Exported Functions ---")
+    current_module = modules[__name__]
+    for name in __all__:
+        public_object = getattr(current_module, name)
+        print()
+        print(name, end="")
+        print(signature(public_object), end="")
+        print(public_object.__doc__, end="")
+
+    try:
+        with open("example.py", "r") as f:
+            print("\n--- Example ---\n")
+            print(f.read())
+    except IOError:
+        pass
+
+def _respond_as_main():
+    '''
+        Respond to command line args, if any.
+    '''
+    if len(argv) <= 1:
+        print("Type 'python root_locus_solver.py --help' for a list of public functions.")
+    elif "help" in argv[1]:
+        _print_help()
+    else:
+        print("Unrecognized argument '" + argv[1] + "'")
+
+# =============================================================================
+# Main
 
 if __name__ == "__main__":
-    raise Exception('''
-            Error: Do not run this script on its own. Call these functions from other scripts.
-                            
-            Import root_locus function to get root_locus info.
-            Import print_info function to print everything nicely.''')
+    _respond_as_main()
