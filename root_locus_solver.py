@@ -8,38 +8,21 @@
 
 import numpy as np                      # Use for finding roots, evaluationg polynomials, finding polynomial derivatives
 
-from sys import argv, modules           # Check for command line arguments and get module objects
-from pprint import pprint               # Use to print nicely
+from sys import argv, modules           # Use for command line arguments and getting module objects
 from collections import Counter         # Use to count number of root occurrences
-from inspect import stack, signature    # Use to get function names
+from inspect import signature           # Use to get function names and signatures
 
-# Exported functions
-__all__ = [
+__all__ = [                             # Exported functions
     "root_locus",
-    "print_info",
 ]
 
 # =============================================================================
 # Constants
 
-# Allow for floating point rounding errors
-_angle_rounding_error = 1e-2
-
-# When checking for equality, round to this decimal place
-_rounding_decimal_place = 3
+_ROUNDING_DECIMAL_PLACE = 3 # Allow for floating point rounding errors.
 
 # =============================================================================
 # Helper Functions
-
-def _get_function_name(depth):
-    '''
-        Get caller function's name.
-        Ex:
-            func A:
-                print(_get_function_name(depth=1))
-            ^ this prints 'A'
-    '''
-    return stack()[depth].function
 
 def _generate_polynomial_from_roots(roots):
     '''
@@ -136,10 +119,7 @@ def _check_angles(points, poles, zeros, K_degree):
         raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
     # Check that values are 0, within some rounding error
-    rounding_error = _angle_rounding_error * np.ones(len(sum_pole_angles))
-    return np.logical_and( \
-                np.less(-rounding_error, value),
-                np.greater(rounding_error, value))
+    return not np.any(np.round(value, decimals=_ROUNDING_DECIMAL_PLACE))
     
 def _angle_of_asymptote(n, m, l, K_degree):
     '''
@@ -266,7 +246,7 @@ def _check_multiplicity(point, b_coefficients, a_coefficients, K_degree):
     roots = np.roots(equation)
 
     # Only look at real value
-    roots = [round(root.real, _rounding_decimal_place) for root in roots]
+    roots = [round(root.real, _ROUNDING_DECIMAL_PLACE) for root in roots]
 
     # Find max multipliciy of roots
     c = Counter(roots)
@@ -297,7 +277,7 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
     if K_degree != "positive" and K_degree != "negative":
         raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
-    centroid = _center_of_asymptotes(poles, zeros)
+    asymptote_centroid = _center_of_asymptotes(poles, zeros)
     asymptote_angles = _angles_of_all_asymptotes(poles, zeros, K_degree)
     departure_angles = _get_all_angles_of_departure(poles, zeros, K_degree)
     real_axis_points = _get_real_axis_points(b_coefficients, a_coefficients, K_degree)
@@ -306,28 +286,12 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
     return {
         "poles" : poles,
         "zeros" : zeros,
-        "centroid" : centroid,
+        "asymptote_centroid" : asymptote_centroid,
         "asymptote_angles" : asymptote_angles,
         "departure_angles" : departure_angles,
         "real_axis_points" : real_axis_points,
         "real_axis_angles" : real_axis_angles,
     }
-
-def print_info(values, stack_depth = 2):
-    '''
-        Print values and info about caller function.
-    '''
-    caller_function = ""
-    try:
-        if stack_depth != None:
-            caller_function = _get_function_name(stack_depth).capitalize()
-    except IndexError:
-        pass
-        
-    print()
-    print("------ " + caller_function + " ------")
-    print("values:")
-    pprint(values)
 
 # =============================================================================
 # CLI
@@ -335,7 +299,7 @@ def print_info(values, stack_depth = 2):
 def _print_help():
     '''
         Print name, args, docstring for all public objects, stored in __all__.
-        Print contents of exampl.py.
+        Print contents of example.py.
     '''
     print("\n--- Exported Functions ---")
     current_module = modules[__name__]
@@ -350,6 +314,8 @@ def _print_help():
         with open("example.py", "r") as f:
             print("\n--- Example ---\n")
             print(f.read())
+        print("OUTPUT:")
+        import example
     except IOError:
         pass
 
@@ -358,7 +324,7 @@ def _respond_as_main():
         Respond to command line args, if any.
     '''
     if len(argv) <= 1:
-        print("Type 'python root_locus_solver.py --help' for a list of public functions.")
+        print("Use 'python root_locus_solver.py --help' for help.")
     elif "help" in argv[1]:
         _print_help()
     else:
