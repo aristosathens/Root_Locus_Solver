@@ -308,9 +308,7 @@ def _print_help():
     current_module = modules[__name__]
     for name in __all__:
         public_object = getattr(current_module, name)
-        # print()
-        print(name, end="")
-        print(signature(public_object))
+        print(name, signature(public_object))
         print(public_object.__doc__)
 
     try:
