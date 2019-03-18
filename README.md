@@ -15,8 +15,8 @@ If K_degree is "negative", this will provide root locus info for when gain is le
 
 Returns a dict of values which includes:
 - poles: Pole locations. Possibly complex numbers.
-- zeros: Zero locations. Possibly copmlex numbers.
-- centroid: Centroid of asymptotes. Possibly copmlex number.
+- zeros: Zero locations. Possibly complex numbers.
+- centroid: Centroid of asymptotes. Possibly complex number.
 - asymptote_angles: Angles that asymptote lines make with respect to the x-axis. In degrees.
 - departure_angles: Angles that branches make when departing original locations (poles). In degrees.
 - real_axis_points: Points where branches enter/exit the real-axis. Real number.
