@@ -21,6 +21,9 @@ __all__ = [                             # Exported functions
 
 _ROUNDING_DECIMAL_PLACE = 3 # Allow for floating point rounding errors.
 
+_POSITIVE = 1               # Options for direction of change in K.
+_NEGATIVE = 2
+
 # =============================================================================
 # Helper Functions
 
@@ -89,10 +92,10 @@ def _points_on_root_locus(points, b_coefficients, a_coefficients, K_degree):
             points, is on the root locus.
         points is the set of values for s to check.
         
-        If K_degree == "positive", equation is:
+        If K_degree is positive, equation is:
             angle(K*b(s)/a(s)) = 180
         
-        If K_degree == "negative", equation is:
+        If K_degree is negative, equation is:
             angle(K*b(s)/a(s)) = 0
 
         Returns the subset of points that is correctly on the locus.
@@ -111,12 +114,10 @@ def _check_angles(points, poles, zeros, K_degree):
     sum_pole_angles = np.array([_get_angles_sum(point, poles) for point in points])
     sum_zero_angles = np.array([_get_angles_sum(point, zeros) for point in points])
 
-    if K_degree == "positive":
+    if K_degree == _POSITIVE:
         value = (sum_zero_angles - sum_pole_angles - 180) % 360
-    elif K_degree == "negative":
+    elif K_degree == _NEGATIVE:
         value = (sum_zero_angles - sum_pole_angles - 0) % 360
-    else:
-        raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
     # Check that values are 0, within some rounding error
     return not np.any(np.round(value, decimals=_ROUNDING_DECIMAL_PLACE))
@@ -130,12 +131,10 @@ def _angle_of_asymptote(n, m, l, K_degree):
             phi = 360(l - 1) / (n - m)
         Returns angle in degrees.
     '''
-    if K_degree == "positive":
+    if K_degree == _POSITIVE:
         return (180 + (l - 1)*360) / (n - m)
-    elif K_degree == "negative":
+    elif K_degree == _NEGATIVE:
         return (l - 1)*360 / (n - m)
-    else:
-        raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
 def _angles_of_all_asymptotes(poles, zeros, K_degree):
     '''
@@ -147,7 +146,7 @@ def _angles_of_all_asymptotes(poles, zeros, K_degree):
     num_asymptotes = n - m
 
     angles = []
-    for l in range(num_asymptotes):
+    for l in range(1, num_asymptotes+1):
         angles.append(_angle_of_asymptote(n, m, l, K_degree))
     
     return np.array(angles)
@@ -174,12 +173,10 @@ def _angle_of_departure(poles, zeros, index, K_degree):
     p = poles[index]
     root_angles = [_get_angle(pole, p) for pole in poles if pole != p]
     zero_angles = [_get_angle(zero, p) for zero in zeros]
-    if K_degree == "positive":
+    if K_degree == _POSITIVE:
         return _wrap_to_pi(180 - (np.sum(zero_angles) - np.sum(root_angles)))
-    elif K_degree == "negative":
+    elif K_degree == _NEGATIVE:
         return _wrap_to_pi(0 - (np.sum(zero_angles) - np.sum(root_angles)))
-    else:
-        raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
 def _get_all_angles_of_departure(poles, zeros, K_degree):
     '''
@@ -234,12 +231,10 @@ def _check_multiplicity(point, b_coefficients, a_coefficients, K_degree):
     b_eval = np.polyval(b_coefficients, point)
     a_eval = np.polyval(a_coefficients, point)
 
-    if K_degree == "positive":
+    if K_degree == _POSITIVE:
         K = -a_eval / b_eval
-    elif K_degree == "negative":
+    elif K_degree == _NEGATIVE:
         K = a_eval / b_eval
-    else:
-        raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
     # Find new roots of a(s) + Kb(s), for this value of K
     equation = np.polyadd(a_coefficients, np.polymul(K, b_coefficients))
@@ -258,23 +253,29 @@ def _check_multiplicity(point, b_coefficients, a_coefficients, K_degree):
 
 def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles = None, K_degree = "positive"):
     '''
-        Get root locus info, given either coefficients for b(s), a(s) or the poles themselves.
+        Get root locus info, given either coefficients for b(s), a(s) or the zeros/poles themselves.
+        Must pass in b_coefficients and a_coefficients OR zeros and poles. No other combinations are allowed.
+        K_degree is 'positive' or 'negative'. It determines direction of change in K.
         Returns dict of values.
     '''
     # If given cofficients, calculate zeros and poles.
-    if b_coefficients == None and a_coefficients == None and \
-        poles != None and zeros != None:
+    if b_coefficients == None and a_coefficients == None \
+            and poles != None and zeros != None:
         b_coefficients = _generate_polynomial_from_roots(zeros)
         a_coefficients = _generate_polynomial_from_roots(poles)
     # If given poles and zeros, calculate coefficients.
-    elif poles == None and zeros == None and \
-        b_coefficients != None and a_coefficients != None:
+    elif poles == None and zeros == None \
+            and b_coefficients != None and a_coefficients != None:
         zeros = np.roots(b_coefficients)
         poles = np.roots(a_coefficients)
     else:
         raise Exception("Error: Passed in wrong combination. Requires either poles + zeros or a_coefficients + b_coefficients, not both.")
 
-    if K_degree != "positive" and K_degree != "negative":
+    if K_degree == "positive":
+        K_degree = _POSITIVE
+    elif K_degree == "negative":
+        K_degree = _NEGATIVE
+    else:
         raise Exception("Error: K_degree must be 'positive' or 'negative'.")
 
     asymptote_centroid = _center_of_asymptotes(poles, zeros)
@@ -301,20 +302,20 @@ def _print_help():
         Print name, args, docstring for all public objects, stored in __all__.
         Print contents of example.py.
     '''
-    print("\n--- Exported Functions ---")
+    print("\n--- Exported Functions ---\n")
     current_module = modules[__name__]
     for name in __all__:
         public_object = getattr(current_module, name)
-        print()
+        # print()
         print(name, end="")
-        print(signature(public_object), end="")
-        print(public_object.__doc__, end="")
+        print(signature(public_object))
+        print(public_object.__doc__)
 
     try:
         with open("example.py", "r") as f:
-            print("\n--- Example ---\n")
+            print("--- Example ---\n")
             print(f.read())
-        print("OUTPUT:")
+        print("\nOUTPUT:")
         import example
     except IOError:
         pass
