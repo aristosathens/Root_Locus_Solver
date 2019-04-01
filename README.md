@@ -44,6 +44,6 @@ pprint(values)
 >>>  'real_axis_angles': []}
 ```
 
-<img src="example_plot_matlab.png"  width="400">
+<img src="example/example_plot_matlab.png"  width="400">
 
 This plot was generated with MatLab's `rlocus` function.
