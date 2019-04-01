@@ -9,17 +9,17 @@
         values = root_locus(poles = poles, zeros = zeros)
 '''
 
-import numpy as np                      # Use for finding roots, evaluationg polynomials, finding polynomial derivatives
-from collections import Counter         # Use to count number of root occurrences
+__all__ = [ "root_locus" ]
 
-__all__ = [ "root_locus" ]              # Exported functions
+import numpy as np
+from collections import Counter
 
 # =============================================================================
 # Constants
 
-_ROUNDING_DECIMAL_PLACE = 3             # Allow for floating point rounding errors.
+_ROUNDING_DECIMAL_PLACE = 3     # Allow for floating point rounding errors.
 
-_POSITIVE = 1                           # Options for direction of change in K.
+_POSITIVE = 1                   # Options for direction of change in K.
 _NEGATIVE = 2
 
 # =============================================================================
@@ -166,12 +166,12 @@ def _angle_of_departure(poles, zeros, index, K_degree):
     '''
     # This is the point of interest
     p = poles[index]
-    root_angles = [_get_angle(pole, p) for pole in poles if pole != p]
+    pole_angles = [_get_angle(pole, p) for pole in poles if pole != p]
     zero_angles = [_get_angle(zero, p) for zero in zeros]
     if K_degree == _POSITIVE:
-        return _wrap_angle(180 - (np.sum(zero_angles) - np.sum(root_angles)))
+        return _wrap_angle(180 - (np.sum(zero_angles) - np.sum(pole_angles)))
     elif K_degree == _NEGATIVE:
-        return _wrap_angle(0 - (np.sum(zero_angles) - np.sum(root_angles)))
+        return _wrap_angle(0 - (np.sum(zero_angles) - np.sum(pole_angles)))
 
 def _get_all_angles_of_departure(poles, zeros, K_degree):
     '''
@@ -261,7 +261,7 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
         zeros = np.roots(b_coefficients)
         poles = np.roots(a_coefficients)
     else:
-        raise Exception("Error: Passed in wrong combination. Requires either poles + zeros or a_coefficients + b_coefficients, not both.")
+        raise Exception("Error: Requires either poles + zeros or a_coefficients + b_coefficients, not both.")
 
     if K_degree == "positive":
         K_degree = _POSITIVE
