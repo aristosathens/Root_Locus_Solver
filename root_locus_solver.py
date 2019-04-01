@@ -2,15 +2,15 @@
     Aristos Athens
     Root Locus Solver
 
-    Import root_locus function to get root_locus info.
-    Import print_info function to print everything nicely.
+    Example:
+        from root_locus_solver import root_locus
+        poles = [ -4 + 2j, -4 - 2j, 1 ]
+        zeros = [ -1 ]
+        values = root_locus(poles = poles, zeros = zeros)
 '''
 
 import numpy as np                      # Use for finding roots, evaluationg polynomials, finding polynomial derivatives
-
-from sys import argv, modules           # Use for command line arguments and getting module objects
 from collections import Counter         # Use to count number of root occurrences
-from inspect import signature           # Use to get function names and signatures
 
 __all__ = [                             # Exported functions
     "root_locus",
@@ -295,44 +295,3 @@ def root_locus(b_coefficients = None, a_coefficients = None, zeros = None, poles
         "real_axis_points" : real_axis_points,
         "real_axis_angles" : real_axis_angles,
     }
-
-# =============================================================================
-# CLI
-
-def _print_help():
-    '''
-        Print name, args, docstring for all public objects, stored in __all__.
-        Print contents of example.py.
-    '''
-    print("\n--- Exported Functions ---\n")
-    current_module = modules[__name__]
-    for name in __all__:
-        public_object = getattr(current_module, name)
-        print(name, signature(public_object))
-        print(public_object.__doc__)
-
-    try:
-        with open("example.py", "r") as f:
-            print("--- Example ---\n")
-            print(f.read())
-        print("\nOUTPUT:")
-        import example
-    except IOError:
-        pass
-
-def _respond_as_main():
-    '''
-        Respond to command line args, if any.
-    '''
-    if len(argv) <= 1:
-        print("Use 'python root_locus_solver.py --help' for help.")
-    elif "help" in argv[1]:
-        _print_help()
-    else:
-        print("Unrecognized argument '" + argv[1] + "'")
-
-# =============================================================================
-# Main
-
-if __name__ == "__main__":
-    _respond_as_main()
