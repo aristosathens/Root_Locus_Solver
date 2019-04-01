@@ -12,18 +12,14 @@
 import numpy as np                      # Use for finding roots, evaluationg polynomials, finding polynomial derivatives
 from collections import Counter         # Use to count number of root occurrences
 
-__all__ = [                             # Exported functions
-    "root_locus",
-]
+__all__ = [ "root_locus" ]              # Exported functions
 
 # =============================================================================
 # Constants
 
-# Allow for floating point rounding errors.
-_ROUNDING_DECIMAL_PLACE = 3 
+_ROUNDING_DECIMAL_PLACE = 3             # Allow for floating point rounding errors.
 
-# Options for direction of change in K.
-_POSITIVE = 1               
+_POSITIVE = 1                           # Options for direction of change in K.
 _NEGATIVE = 2
 
 # =============================================================================
@@ -38,15 +34,20 @@ def _generate_polynomial_from_roots(roots):
     '''
     return np.flip(np.polynomial.polynomial.polyfromroots(roots))
 
-def _wrap_to_pi(angle):
+def _wrap_angle(angle):
     '''
-        Return angle value that is between [-pi, pi].
+        Return angle value that is between [-360, 360].
+        Handles lists and single values.
+        Maintains angle sign.
         angle is in degrees.
     '''
-    if isinstance(angle, list):
-        return np.unwrap(angle)
+    if isinstance(angle, (list, np.ndarray)):
+        return np.array([_wrap_angle(a) for a in angle])
     else:
-        return np.unwrap(np.array([angle]))[0]
+        if angle < 0:
+            return (angle % 360) - 360
+        else:
+            return angle % 360
 
 def _get_distance(point1, point2):
     '''
@@ -55,8 +56,8 @@ def _get_distance(point1, point2):
         Returns distance as float.
     '''
     delta_real = point1.real - point2.real
-    delta_j = point1.imag - point2.imag
-    return np.sqrt(delta_real**2 + delta_j**2)
+    delta_imag = point1.imag - point2.imag
+    return np.sqrt(delta_real**2 + delta_imag**2)
 
 def _get_angle(point1, point2):
     r'''
@@ -76,7 +77,7 @@ def _get_angle(point1, point2):
     delta_real = point2.real - point1.real
     delta_j = point2.imag - point1.imag
     angle = np.arctan2(delta_j, delta_real)
-    return _wrap_to_pi(np.degrees(angle))
+    return _wrap_angle(np.degrees(angle))
 
 def _get_angles_sum(point, poles_or_zeros):
     '''
@@ -90,40 +91,32 @@ def _get_angles_sum(point, poles_or_zeros):
 
 def _points_on_root_locus(points, b_coefficients, a_coefficients, K_degree):
     '''
-        Check if the given combination of K, a(s), and b(s) evaluatied at
-            points, is on the root locus.
-        points is the set of values for s to check.
-        
+        Return the subset of points that is correctly on the locus.
+        points is the set of values to check.
+
         If K_degree is positive, equation is:
             angle(K*b(s)/a(s)) = 180
         
         If K_degree is negative, equation is:
             angle(K*b(s)/a(s)) = 0
-
-        Returns the subset of points that is correctly on the locus.
     '''
     # Recalculate poles and zeros from polynomials
     zeros = np.roots(b_coefficients)
     poles = np.roots(a_coefficients)
-    is_on_root_locus = _check_angles(points, poles, zeros, K_degree)
-    return points[is_on_root_locus] 
 
-def _check_angles(points, poles, zeros, K_degree):
-    '''
-        Check if we have valid point for the root locus.
-        K_degree is 'positive' or 'negative'.
-    '''
-    sum_pole_angles = np.array([_get_angles_sum(point, poles) for point in points])
     sum_zero_angles = np.array([_get_angles_sum(point, zeros) for point in points])
+    sum_pole_angles = np.array([_get_angles_sum(point, poles) for point in points])
+    difference = sum_zero_angles - sum_pole_angles
 
     if K_degree == _POSITIVE:
-        value = (sum_zero_angles - sum_pole_angles - 180) % 360
+        values = _wrap_angle(difference - 180)
     elif K_degree == _NEGATIVE:
-        value = (sum_zero_angles - sum_pole_angles - 0) % 360
+        values = _wrap_angle(difference - 0)
 
-    # Check that values are 0, within some rounding error
-    return not np.any(np.round(value, decimals=_ROUNDING_DECIMAL_PLACE))
-    
+    # Check for values are 0, within some rounding error
+    valid_points = [v == 0 for v in np.round(values, decimals=_ROUNDING_DECIMAL_PLACE)]
+    return points[valid_points]
+
 def _angle_of_asymptote(n, m, l, K_degree):
     '''
         Find phi, the angle of the line of the asymptote.
@@ -176,9 +169,9 @@ def _angle_of_departure(poles, zeros, index, K_degree):
     root_angles = [_get_angle(pole, p) for pole in poles if pole != p]
     zero_angles = [_get_angle(zero, p) for zero in zeros]
     if K_degree == _POSITIVE:
-        return _wrap_to_pi(180 - (np.sum(zero_angles) - np.sum(root_angles)))
+        return _wrap_angle(180 - (np.sum(zero_angles) - np.sum(root_angles)))
     elif K_degree == _NEGATIVE:
-        return _wrap_to_pi(0 - (np.sum(zero_angles) - np.sum(root_angles)))
+        return _wrap_angle(0 - (np.sum(zero_angles) - np.sum(root_angles)))
 
 def _get_all_angles_of_departure(poles, zeros, K_degree):
     '''
@@ -198,16 +191,13 @@ def _get_real_axis_points(b_coefficients, a_coefficients, K_degree):
             b*a' - a*b' = 0
         Then check if points on root locus using angles
     '''
-    # Find roots using: b*a' - a*b' = 0
-    b = b_coefficients
-    a = a_coefficients
-    d_a = np.polyder(a)
-    d_b = np.polyder(b)
-    eq = np.polysub(np.polymul(b, d_a), np.polymul(a, d_b))
+    d_b = np.polyder(b_coefficients)
+    d_a = np.polyder(a_coefficients)
+    eq = np.polysub(np.polymul(b_coefficients, d_a), np.polymul(a_coefficients, d_b))
     roots = np.roots(eq)
 
     # Remove any points not actually on root locus
-    return _points_on_root_locus(roots, b, a, K_degree)
+    return np.real(_points_on_root_locus(roots, b_coefficients, a_coefficients, K_degree))
     
 def _get_real_axis_angles(real_axis_points, b_coefficients, a_coefficients, K_degree):
     '''
